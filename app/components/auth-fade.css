@@ -1,0 +1,14 @@
+.auth-fade-enter {
+  opacity: 0;
+}
+.auth-fade-enter-active {
+  opacity: 1;
+  transition: opacity 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.auth-fade-exit {
+  opacity: 1;
+}
+.auth-fade-exit-active {
+  opacity: 0;
+  transition: opacity 350ms cubic-bezier(0.4, 0.0, 0.2, 1);
+}

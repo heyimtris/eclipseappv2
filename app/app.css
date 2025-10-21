@@ -1,0 +1,158 @@
+/* import instrument sans font (must be before other statements) */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Instrument Sans", "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+* {
+   letter-spacing: -0.05em;
+}
+
+html,
+body {
+  @apply bg-white dark:bg-gray-950;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}
+
+body {
+  touch-action: pan-y;
+overflow:hidden;
+}
+
+button, [type="button"], [type="reset"], [type="submit"] {
+  transition: transform 0.2s;
+  transform: scale(1);
+}
+
+button:hover, [type="button"]:hover, [type="reset"]:hover, [type="submit"]:hover {
+  cursor: pointer;
+  transform: scale(1.02);
+  transition: transform 0.2s;
+}
+
+button:active, [type="button"]:active, [type="reset"]:active, [type="submit"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s;
+}
+
+
+@media (max-width: 768px) {
+  input[type="color"],
+  input[type="date"],
+  input[type="datetime"],
+  input[type="datetime-local"],
+  input[type="email"],
+  input[type="month"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="text"],
+  input[type="time"],
+  input[type="url"],
+  input[type="week"],
+  select:focus,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* change tailwind purple-400 to eclipse blue */
+.bg-purple-400, .dark\:bg-purple-400 {
+  background-color: #AFAFFF !important;
+}
+
+.text-purple-400, .dark\:text-purple-400 {
+  color: #AFAFFF !important;
+}
+
+.border-purple-400, .dark\:border-purple-400 {
+  border-color: #AFAFFF !important;
+}
+
+.bg-purple-100, .dark\:bg-purple-100 { background-color: #F3F3FF !important; }
+.bg-purple-200, .dark\:bg-purple-200 { background-color: #E0E0FF !important; }
+.bg-purple-300, .dark\:bg-purple-300 { background-color: #C8C8FF !important; }
+.bg-purple-400, .dark\:bg-purple-400 { background-color: #AFAFFF !important; }
+.bg-purple-500, .dark\:bg-purple-500 { background-color: #8F8FFF !important; }
+.bg-purple-600, .dark\:bg-purple-600 { background-color: #6F6FFF !important; }
+.bg-purple-700, .dark\:bg-purple-700 { background-color: #4F4FFF !important; }
+.bg-purple-800, .dark\:bg-purple-800 { background-color: #2F2FFF !important; }
+.bg-purple-900, .dark\:bg-purple-900 { background-color: #1A1A40 !important; }
+
+.bg-white {
+  background-color: #EFEFEF !important;
+}
+
+.bg-gray-950, .dark\:bg-gray-950 {
+  background-color: #202C39 !important;
+}
+
+.border-gray-950, .dark\:border-gray-950 {
+  border-color: #202C39 !important;
+}
+
+.bg-gray-850, .dark\:bg-gray-850 {
+  background-color: #283845 !important;
+}
+
+.border-gray-850, .dark\:border-gray-850 {
+  border-color: #283845 !important;
+}
+
+
+/* Scrollbar styling */
+/* For WebKit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #efefef;
+
+  /* For dark mode */
+  @media (prefers-color-scheme: dark) {
+    background: #202c39;
+  }
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: #a8a8a8;
+  }
+}
+
+.login-cont {
+  /* add a "liquid glass" effect */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 24px;
+  transition: background 0.3s, border 0.3s;
+
+  @media (prefers-color-scheme: dark) {
+    background: rgba(32, 44, 57, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+}
+
+.alert {
+  border-radius: 24px;
+box-shadow: 0 3.182px 3.182px 0 rgba(0, 0, 0, 0.05) inset;
+display: flex;
+align-self: stretch;
+font-size:12px;
+}
+
