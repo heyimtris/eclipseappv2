@@ -1,14 +1,19 @@
-import { getCollection } from "../../../../server/db.server";
-import { ObjectId } from "mongodb";
 import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
+import { getCollection } from "~/server/db.server";
+import dotenv from "dotenv";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+dotenv.config();
 
-export async function action({ request }: { request: Request }) {
+const JWT_SECRET = process.env.JWT_SECRET as string;
+export async function action({ request, params }: { request: Request; params: any }) {
+
+console.log("ACTION CALLED");
   const body = await request.json();
-  const { conversationId, text } = body;
-  if (!conversationId || !text) {
-    return new Response(JSON.stringify({ error: "Missing conversationId or text" }), { 
+  const { text } = body;
+  const otherUserId = body.userId;
+  if (!otherUserId || !text) {
+    return new Response(JSON.stringify({ error: "Missing userId or text" }), { 
       status: 400,
       headers: { "Content-Type": "application/json" }
     });
@@ -44,20 +49,45 @@ export async function action({ request }: { request: Request }) {
     });
   }
 
-  const messagesCol = await getCollection("messages");
+  // Find the direct conversation between user and otherUser (ignore type field)
+  const conversationsCol = await getCollection("conversations");
+  const userObjId = user._id instanceof ObjectId ? user._id : new ObjectId(user._id);
+  const otherObjId = otherUserId instanceof ObjectId ? otherUserId : new ObjectId(otherUserId);
+  const query = {
+    $or: [
+      { members: { $all: [userObjId, otherObjId] } },
+      { participants: { $all: [userObjId, otherObjId] } }
+    ]
+  };
+  console.log('[ACTION] Conversation query:', JSON.stringify(query));
+  const directConv = await conversationsCol.findOne(query);
+  if (!directConv) {
+    return new Response(JSON.stringify({ error: "Conversation not found" }), {
+      status: 404,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
+  // Add message to the conversation's messages array
   const messageDoc = {
-    author: new ObjectId(payload.id),
+    _id: new ObjectId(),
+    author: user._id,
     content: text,
-    conversation: new ObjectId(conversationId),
     attachments: [],
     reactions: [],
     createdAt: new Date(),
   };
-  const result = await messagesCol.insertOne(messageDoc);
-  
+  await conversationsCol.updateOne(
+    { _id: directConv._id },
+    { $push: { messages: messageDoc } } as any
+  );
+  // Debug: log the updated conversation
+  const updatedConv = await conversationsCol.findOne({ _id: directConv._id });
+  console.log('[ACTION] Updated conversation messages:', updatedConv?.messages);
+
   // Return normalized format for UI
   return new Response(JSON.stringify({
-    _id: result.insertedId.toString(),
+    _id: messageDoc._id.toString(),
     sender: {
       _id: user._id.toString(),
       username: user.username,

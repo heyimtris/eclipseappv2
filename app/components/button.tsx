@@ -12,7 +12,7 @@ type ButtonProps = {
     disabled?: boolean;
 };
 
-function Button({ to, onClick, type, variant, className = "", children, onMouseEnter, onMouseLeave, disabled }: ButtonProps) {
+function Button({ to, onClick, type, variant, title, className = "", children, onMouseEnter, onMouseLeave, disabled }: ButtonProps) {
     const baseStyles = `
     inline-flex
     items-center
@@ -34,6 +34,7 @@ function Button({ to, onClick, type, variant, className = "", children, onMouseE
             <Link
                 to={to}
                 type="button"
+                title={title}
                 className={`${baseStyles} ${variantStyles} ${className}`}
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
@@ -45,6 +46,7 @@ function Button({ to, onClick, type, variant, className = "", children, onMouseE
     return (
         <button
             onClick={onClick}
+            title={title}
             type={type}
             disabled={disabled}
             className={`${baseStyles} ${variantStyles} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}

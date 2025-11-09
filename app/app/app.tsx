@@ -4,6 +4,7 @@ import { Avatar } from "../components/avatar";
 import { GroupChatAvatar } from "../components/groupchat-avatar";
 import { User } from "../components/user";
 import { useNavigate } from "react-router";
+// ...existing imports
 
 import React, { useState, useRef } from "react";
 
@@ -35,6 +36,7 @@ function LoadingScreen() {
     );
 }
 import { Tab, TabContainer } from "../components/tabs";
+import { ChatSidebar } from "~/components/ChatSidebar";
 
 
 
@@ -49,7 +51,9 @@ export function AppPage({ user, friends, conversations, messages, participants }
     const [chatsClickCount, setChatsClickCount] = useState(0);
     const [showSpiral, setShowSpiral] = useState(false);
     const [loading, setLoading] = useState(false); // Set to true to show loading
-    
+    // removed new chat / add friend modal state — Sidebar handles the action button now
+
+   
     const tabs = ["Chats", "Servers", "Friends", "Avatar", "Search"];
     const [activeTab, setActiveTab] = useState("Chats");
     const [previousTab, setPreviousTab] = useState("Chats"); // Track previous tab for search
@@ -171,6 +175,8 @@ export function AppPage({ user, friends, conversations, messages, participants }
         }
     }, [activeTab]);
 
+    // New chat / add friend handlers removed — user will implement if desired
+
     return (
         <main className="flex flex-row min-h-screen h-screen w-full m-0 p-0 relative">
             {loading && <LoadingScreen />}
@@ -212,355 +218,16 @@ export function AppPage({ user, friends, conversations, messages, participants }
                     `}</style>
                 </div>
             )}
-            <div className="sidebar h-screen p-4 w-full md:w-[400px] bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-700 flex flex-col">
-                {/* TabContainer at top for desktop only */}
-                <div className="hidden md:block mb-4">
-                    <TabContainer externalActiveTab={activeTab}>
-                    {activeTab === "Search"
-                        ? (
-                            <div
-                                ref={searchBarRef}
-                                className={`flex items-center relative rounded-3xl overflow-hidden bg-gray-850 dark:bg-gray-900`}
-                                style={{
-                                    minWidth: '48px',
-                                    width: '100%',
-                                    maxWidth: '100%',
-                                    transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
-                                }}
-                            >
-                                <button
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white dark:text-white focus:outline-none z-10"
-                                    style={{ transition: 'opacity 0.4s', opacity: 1 }}
-                                    onClick={() => {
-                                        setActiveTab(previousTab);
-                                        setSearchValue("");
-                                    }}
-                                    tabIndex={0}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                    </svg>
-                                </button>
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    value={searchValue}
-                                    onChange={e => setSearchValue(e.target.value)}
-                                    autoFocus
-                                    className="pl-12 pr-4 py-3 rounded-3xl bg-gray-850 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 w-full"
-                                    style={{
-                                        opacity: 1,
-                                        transform: 'translateX(0)',
-                                        transition: 'opacity 0.4s, transform 0.4s',
-                                    }}
-                                />
-                            </div>
-                        )
-                        : tabs.map(tab => (
-                            tab === "Search"
-                                ? <div
-                                    key={tab}
-                                    ref={searchBarRef}
-                                    className="flex items-center relative w-12 h-12 bg-gray-850 dark:bg-gray-950 rounded-3xl overflow-hidden justify-center"
-                                    style={{ minWidth: '48px', maxWidth: '48px' }}
-                                >
-                                    <button
-                                        className="flex items-center justify-center px-4 h-10 rounded-3xl text-white bg-gray-850 dark:bg-gray-850 hover:scale-105 transition-transform duration-150 ease-in-out"
-                                        onClick={() => {
-                                            setPreviousTab(activeTab === "Avatar" ? "Chats" : activeTab);
-                                            setActiveTab("Search");
-                                        }}
-                                        style={{ outline: 'none', border: 'none', background: 'none', minWidth: '48px', maxWidth: '48px' }}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                : <Tab
-                                    key={tab}
-                                    label={tab}
-                                    isActive={activeTab === tab}
-                                    onClick={() => {
-                                        if (tab === "Chats") {
-                                            setChatsClickCount(prev => {
-                                                const next = prev + 1;
-                                                if (next >= 10) {
-                                                    setShowSpiral(true);
-                                                    setTimeout(() => setShowSpiral(false), 4000);
-                                                    return 0;
-                                                }
-                                                return next;
-                                            });
-                                        } else {
-                                            setChatsClickCount(0);
-                                        }
-                                        if (activeTab !== "Search") {
-                                            setPreviousTab(activeTab);
-                                        }
-                                        setActiveTab(tab);
-                                        if (tab !== "Search") setSearchValue("");
-                                    }}
-                                />
-                        ))
-                    }
-                </TabContainer>
-                </div>
+           <ChatSidebar
+               user={user}
+          friends={friends}
+          conversations={conversations}
+          messages={messages}
+          participants={participants}
+          activeUserId={user._id}
+          orientation="horizontal"
+            />
 
-                {/* Content area - scrollable */}
-                <div className="flex-1 overflow-y-auto mt-5 md:mt-0">
-{activeTab === "Chats" && (
-    <div className="sidebar-list flex flex-col items-center justify-center mt-6 md:mt-0">
-        {chatsData.map((chat, index) => (
-            chat.isGroup ? (
-                <User 
-                    key={index}
-                    onClick={() => navigate(`/messages/group/${chat.conversationId}`)}
-                    isActive={false}
-                >
-                    <GroupChatAvatar members={chat.members} />
-                    <div>
-                        <h2 className="font-semibold text-lg">{chat.name}</h2>
-                        <p className="text-sm text-gray-400">{chat.memberCount + 1} Members</p>
-                    </div>
-                </User>
-            ) : (
-                <User 
-                    key={index}
-                    onClick={() => navigate(`/messages/direct/${chat.userId}`)}
-                    isActive={false}
-                >
-                    <Avatar src={chat.avatar} status={chat.statusType} />
-                    <div>
-                        <h2 className="font-semibold text-lg">{chat.username}</h2>
-                        <p className="text-sm text-gray-400">{chat.customStatus ? chat.customStatus : chat.status}</p>
-                    </div>
-                </User>
-            )
-        ))}
-    </div>
-)}
-
-{activeTab === "Servers" && (
-    <div className="sidebar-list flex flex-col items-center justify-center mt-6 md:mt-0">
-        {serversData.map((server, index) => (
-            <User key={index}>
-                <div className="server-avatar bg-purple-400 text-white rounded-full h-10 w-10 flex items-center justify-center text-lg font-bold">
-                    {server.name.substring(0, 2).toUpperCase()}
-                </div>
-                <div className="flex flex-col">
-                    <h2 className="font-semibold text-lg">{server.name}</h2>
-                    <p className="text-sm text-gray-400">
-                        {server.unread > 0 && <span className="unread-circle bg-blue-400 h-3 w-3 rounded-full inline-block mr-1"></span>}
-                        {server.unread > 0 ? `${server.unread} unread messages` : 'No new messages'}
-                    </p>
-                </div>
-            </User>
-        ))}
-    </div>
-)}
-
-{activeTab === "Friends" && (
-    <div className="sidebar-list flex flex-col items-center justify-center mt-6 md:mt-0">
-        {friendsData.map((friend, index) => (
-            <User key={index}>
-                <Avatar src={friend.avatar} status={friend.statusType} />
-                <div>
-                    <h2 className="font-semibold text-lg">{friend.username}</h2>
-                    <p className="text-sm text-gray-400">{friend.customStatus ? friend.customStatus : toText(friend.statusType)}</p>
-                </div>
-            </User>
-        ))}
-    </div>
-)}
-
-    {activeTab === "Search" && (
-    <div className="sidebar-list flex flex-col items-center justify-center mt-6 md:mt-0">
-        {searchValue ? (
-            <>
-                {previousTab === "Chats" && getFilteredData().length > 0 && (
-                    getFilteredData().map((chat: any, index: number) => (
-                        chat.isGroup ? (
-                            <User 
-                                key={index}
-                                onClick={() => navigate(`/messages/group/${chat.conversationId}`)}
-                                isActive={false}
-                            >
-                                <GroupChatAvatar members={chat.members} />
-                                <div>
-                                    <h2 className="font-semibold text-lg">{chat.name}</h2>
-                                    <p className="text-sm text-gray-400">{chat.memberCount + 1} Members</p>
-                                </div>
-                            </User>
-                        ) : (
-                            <User 
-                                key={index}
-                                onClick={() => navigate(`/messages/direct/${chat.userId}`)}
-                                isActive={false}
-                            >
-                                <Avatar src={chat.avatar} status={chat.statusType} />
-                                <div>
-                                    <h2 className="font-semibold text-lg">{chat.username}</h2>
-                                    <p className="text-sm text-gray-400">{chat.customStatus ? chat.customStatus : chat.status}</p>
-                                </div>
-                            </User>
-                        )
-                    ))
-                )}
-                {previousTab === "Friends" && getFilteredData().length > 0 && (
-                    getFilteredData().map((friend: any, index: number) => (
-                        <User key={index}>
-                            <Avatar src={friend.avatar} status={friend.statusType} />
-                            <div>
-                                <h2 className="font-semibold text-lg">{friend.username}</h2>
-                                <p className="text-sm text-gray-400">{friend.status}</p>
-                            </div>
-                        </User>
-                    ))
-                )}
-                {previousTab === "Servers" && getFilteredData().length > 0 && (
-                    getFilteredData().map((server: any, index: number) => (
-                        <User key={index}>
-                            <div className="server-avatar bg-purple-400 text-white rounded-full h-10 w-10 flex items-center justify-center text-lg font-bold">
-                                {server.name.substring(0, 2).toUpperCase()}
-                            </div>
-                            <div className="flex flex-col">
-                                <h2 className="font-semibold text-lg">{server.name}</h2>
-                                <p className="text-sm text-gray-400">
-                                    {server.unread > 0 && <div className="unread-circle bg-blue-400 h-3 w-3 rounded-full inline-block mr-1"></div>}
-                                    {server.unread > 0 ? `${server.unread} unread messages` : 'No new messages'}
-                                </p>
-                            </div>
-                        </User>
-                    ))
-                )}
-                {getFilteredData().length === 0 && (
-                    <p className="text-gray-400">No results found for "{searchValue}"</p>
-                )}
-            </>
-        ) : (
-            <p className="text-gray-400">Type to search {previousTab.toLowerCase()}...</p>
-        )}
-    </div>
-    )}
-
-        {activeTab === "Avatar" && (
-            <div className="sidebar-list flex flex-col mt-6 px-2 py-4">
-                <User
-                
-                >
-                    <Avatar src={user.avatar === "default.png" ? "/pingu.jpg" : user.avatar || "/pingu.jpg"} status={["offline", "online", "away", "dnd"][user.status || 0] || "offline"} />
-                    <div className="text-center">
-                        <h2 className="font-semibold text-lg">{user.username}</h2>
-                        <p className="text-sm text-gray-400">{user.customStatus || toText(["offline", "online", "away", "dnd"][user.status || 0] || "offline")}</p>
-                    </div>
-                </User>
-                <div className="bio text-left mt-2 px-2">
-                    <p className="text-gray-600 dark:text-gray-300">{user.bio || "No bio set."}</p>
-                </div>
-                <div className="flex flex-row w-full gap-4 align-middle mt-6 text-center">
-                    <Button variant="primary" className="w-full mb-2">Edit Profile</Button>
-                    <Button variant="secondary" className="w-full mb-2">Settings</Button>
-                </div>
-            </div>
-        )}
-                </div>
-
-                {/* TabContainer at bottom for mobile only */}
-                <div className="md:hidden mt-auto pt-4">
-                    <TabContainer externalActiveTab={activeTab}>
-                        {activeTab === "Search"
-                            ? (
-                                <div
-                                    ref={searchBarRef}
-                                    className={`flex items-center relative rounded-3xl overflow-hidden bg-gray-850 dark:bg-gray-900`}
-                                    style={{
-                                        minWidth: '48px',
-                                        width: '100%',
-                                        maxWidth: '100%',
-                                        transition: 'width 0.5s cubic-bezier(0.4,0,0.2,1)',
-                                    }}
-                                >
-                                    <button
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-white dark:text-white focus:outline-none z-10"
-                                        style={{ transition: 'opacity 0.4s', opacity: 1 }}
-                                        onClick={() => {
-                                            setActiveTab(previousTab);
-                                            setSearchValue("");
-                                        }}
-                                        tabIndex={0}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                    </button>
-                                    <input
-                                        type="text"
-                                        placeholder="Search..."
-                                        value={searchValue}
-                                        onChange={e => setSearchValue(e.target.value)}
-                                        autoFocus
-                                        className="pl-12 pr-4 py-3 rounded-3xl bg-gray-850 dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-0 w-full"
-                                        style={{
-                                            opacity: 1,
-                                            transform: 'translateX(0)',
-                                            transition: 'opacity 0.4s, transform 0.4s',
-                                        }}
-                                    />
-                                </div>
-                            )
-                            : tabs.map(tab => (
-                                tab === "Search"
-                                    ? <div
-                                        key={tab}
-                                        ref={searchBarRef}
-                                        className="flex items-center relative w-12 h-12 bg-gray-850 dark:bg-gray-950 rounded-3xl overflow-hidden justify-center"
-                                        style={{ minWidth: '48px', maxWidth: '48px' }}
-                                    >
-                                        <button
-                                            className="flex items-center justify-center px-4 h-10 rounded-3xl text-white bg-gray-850 dark:bg-gray-850 hover:scale-105 transition-transform duration-150 ease-in-out"
-                                            onClick={() => {
-                                                setPreviousTab(activeTab === "Avatar" ? "Chats" : activeTab);
-                                                setActiveTab("Search");
-                                            }}
-                                            style={{ outline: 'none', border: 'none', background: 'none', minWidth: '48px', maxWidth: '48px' }}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    : <Tab
-                                        key={tab}
-                                        label={tab}
-                                        isActive={activeTab === tab}
-                                        onClick={() => {
-                                            if (tab === "Chats") {
-                                                setChatsClickCount(prev => {
-                                                    const next = prev + 1;
-                                                    if (next >= 10) {
-                                                        setShowSpiral(true);
-                                                        setTimeout(() => setShowSpiral(false), 4000);
-                                                        return 0;
-                                                    }
-                                                    return next;
-                                                });
-                                            } else {
-                                                setChatsClickCount(0);
-                                            }
-                                            if (activeTab !== "Search") {
-                                                setPreviousTab(activeTab);
-                                            }
-                                            setActiveTab(tab);
-                                            if (tab !== "Search") setSearchValue("");
-                                        }}
-                                    />
-                            ))
-                        }
-                    </TabContainer>
-                </div>
-
-</div>
             <div className="md:flex-1 w-full flex-col justify-center align-center items-center  hidden md:flex p-6 bg-white dark:bg-gray-950">
                 <img className="w-24 h-24 mb-4" src="https://media.tenor.com/0TAtgtk6u6kAAAAj/cat-yippe.gif" alt="Eclipse Logo" />
                 <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-gray-100">Welcome to Eclipse!</h1>

@@ -8,8 +8,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  "https://jih5mpgnpili.share.zrok.io",
-  "https://gagjltrs7bw9.share.zrok.io"
+  "https://ulgy32qqx7b6zj3n.l.tunwg.com"
 ];
 const io = new Server(server, {
   cors: {
@@ -48,6 +47,9 @@ io.on("connection", (socket) => {
   socket.on("message", (payload) => {
     console.log("[SERVER] Received message event:", payload);
     if (payload?.conversationId) {
+      // Check room membership for debugging
+      const roomSockets = io.sockets.adapter.rooms.get(payload.conversationId);
+      console.log(`[SERVER] Room ${payload.conversationId} sockets:`, roomSockets ? Array.from(roomSockets) : []);
       io.to(payload.conversationId).emit("message", payload);
       console.log(`[SERVER] Relayed message to room ${payload.conversationId}`);
     } else {
@@ -55,10 +57,25 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Typing indicator relay
+  socket.on("typing", (payload) => {
+    console.log(`[SERVER] Received typing event:`, payload);
+    if (payload?.conversationId && payload?.userId) {
+      // Check room membership for debugging
+      const roomSockets = io.sockets.adapter.rooms.get(payload.conversationId);
+      console.log(`[SERVER] Room ${payload.conversationId} sockets:`, roomSockets ? Array.from(roomSockets) : []);
+      socket.to(payload.conversationId).emit("typing", payload);
+      console.log(`[SERVER] Relayed typing event to room ${payload.conversationId}`);
+    } else {
+      console.log(`[SERVER] Typing event missing conversationId or userId:`, payload);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("Socket disconnected:", socket.id);
   });
 });
+
 
 const PORT = process.env.SOCKET_PORT || 3001;
 server.listen(PORT, () => {

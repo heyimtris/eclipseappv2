@@ -8,5 +8,6 @@ export default [
 	route("messages/direct/:userId", "routes/messages.direct.$userId.tsx"),
 	route("messages/group/:conversationId", "routes/messages.group.$conversationId.tsx"),
 	route("api/auth", "routes/api.auth.tsx"),
-	route("api/dbcheck", "routes/api.dbcheck.tsx")
+	route("api/dbcheck", "routes/api.dbcheck.tsx"),
+	route("api/messages/send", "routes/api/messages/send.tsx")
 ] satisfies RouteConfig;

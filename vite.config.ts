@@ -34,8 +34,9 @@ export default defineConfig({
           });
 
           socket.on("message", (data) => {
-            const { conversationId, message } = data;
-            io.to(conversationId).emit("message", message);
+            const { conversationId, message } = data || {};
+            if (!conversationId) return;
+            io.to(conversationId).emit("message", { conversationId, message });
             console.log(`Message sent to room ${conversationId}`);
           });
 
