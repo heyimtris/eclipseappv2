@@ -102,6 +102,16 @@ export function ChatSidebar({
         }
     });
 
+    // get users that friended us but we haven't friend them back yet (incoming requests)
+    const friendRequests = safeParticipants.filter(participant => {
+        return participant.friends && participant.friends.includes(user._id) && !friends.find(friend => friend._id === participant._id);
+    });
+
+    // get users that we friended but they haven't friended us back yet (outgoing requests)
+    const outgoingRequests = safeParticipants.filter(participant => {
+        return user.friends && user.friends.includes(participant._id) && !participant.friends?.includes(user._id);
+    });
+
     const friendsData = friends.map(friend => ({
         username: friend.username,
         status: friend.status || "",
@@ -155,12 +165,133 @@ export function ChatSidebar({
         }
     }, [activeTab]);
 
+    function acceptFriendRequest(requesterId: string) {
+        fetch('/api/friend/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ friendId: requesterId, userId: String(user._id) })
+        });
+    }
+
+    function rejectFriendRequest(requesterId: string) {
+        // remove us from their friends list
+        fetch('/api/friend/rejectRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ friendId: requesterId, userId: String(user._id) })
+        });
+    }
+
+    function cancelFriendRequest(requesteeId: string) {
+        // remove them from our friends list
+        fetch('/api/friend/cancelRequest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ friendId: requesteeId, userId: String(user._id) })
+        });
+    }
+
     return (
+        <>
+        {showPlusPopup && (
+                     <div className="absolute top-0 left-0 w-screen h-screen  bg-opacity-50 flex items-center justify-center z-50" style={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)'
+                     }} onClick={() => setShowPlusPopup(false)}>
+                        <div className="bg-gray-800 dark:bg-gray-800 p-12 rounded-2xl shadow-lg text-center flex flex-col" onClick={(e) => e.stopPropagation()}>
+                            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                                {activeTab == "Friends" ? "Add a new friend" : `Create a new ${activeTab.toLowerCase().slice(0, -1)}`}
+                            </h2>
+                            {activeTab == "Chats" && (
+                                <>                                  <p className="text-gray-600 dark:text-gray-300 mb-6">DMs, group chats, anything goes!</p>
+                                <div className="mb-6">
+                                    <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-gray-100">Select friends to start a group chat:</h3>
+                                    <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+                                        {friends.map((friend: any) => (
+                                            <label
+                                                key={friend._id}
+                                                className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    value={friend._id}
+                                                    className="form-checkbox h-5 w-5 text-blue-600"
+                                                />
+                                                <Avatar src={friend.avatar === "default.png" ? "/pingu.jpg" : friend.avatar || "/pingu.jpg"} style={{ width: 32, height: 32 }} />
+                                                <span className="font-medium text-gray-900 dark:text-gray-100">{friend.username || friend.nickname || "Unknown"}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <Button variant="primary" className="w-full" onClick={() => {
+                                    fetch('/api/chats/create', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json' 
+                                        },
+                                        body: JSON.stringify({
+                                            memberIds: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map((input: any) => input.value)
+                                        })
+                                    }).then(response => {
+                                        if (response.ok) {
+                                            // Handle successful chat creation
+                                            setShowPlusPopup(false);
+                                        } else {
+                                            alert("Failed to create chat.");
+                                        }
+                                    });
+                                }}>
+                                    Create Chat
+                                </Button>
+                                </>
+                                )}
+                            {activeTab == "Friends" && (
+                                <>
+                                <p className="text-gray-600 dark:text-gray-300 mb-6">enter their username below. it's that simple!</p>
+                                <input
+                                    type="text"
+                                    placeholder="Friend's username"
+                                    className="w-full p-3 rounded-lg mb-4 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <Button variant="primary" className="w-full" onClick={() => {
+                                    const input = document.querySelector('input[type="text"]') as HTMLInputElement;
+                                    fetch('/api/friend/add', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json' 
+                                        },
+                                        body: JSON.stringify({
+                                            friendUsername: input.value,
+                                            userId: String(user._id)
+                                        })
+                                    }).then(async response => {
+                                        if (response.ok) {
+                                            // Handle successful friend request
+                                            setShowPlusPopup(false);
+                                        } else {
+                                            const res = await response.json();
+                                            alert("Failed to send friend request. Reason: " + res.error);
+                                        }
+                                    });
+                                }}>
+                                    Send Friend Request
+                                </Button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
             <div className={`sidebar p-4 w-full bg-gray-100 dark:bg-gray-800 border-r border-gray-300 dark:border-gray-700 flex ${
                 orientation === "horizontal" ? "flex-col" : "flex-row"
             } ${
                 orientation === "horizontal" ? "h-screen" : "h-full"
             }`}>
+                
             {/* TabContainer at top for desktop only */}
             <div className={`hidden md:block mb-4 ${orientation === "vertical" ? "overflow-x-auto" : ""}`}>
                 <TabContainer externalActiveTab={activeTab}>
@@ -243,9 +374,7 @@ export function ChatSidebar({
             </div>
 
             {/* Content area - scrollable */}
-            <div className={`flex-1 mt-5 md:mt-0 ${
-                orientation === "horizontal" ? "overflow-y-auto" : "overflow-x-auto overflow-y-hidden"
-            }`}>
+            <div className={`flex-1 mt-5 md:mt-0 overflow-hidden`}>
                 {activeTab === "Chats" && (
                     <div className={`sidebar-list flex items-center ${orientation === "vertical" ? "justify-start" : "justify-center"} mt-6 md:mt-0 gap-1 ${
                         orientation === "horizontal" ? "flex-col" : "flex-row"
@@ -313,6 +442,31 @@ export function ChatSidebar({
                     <div className={`sidebar-list flex items-center ${orientation === "vertical" ? "justify-start" : "justify-center"} mt-6 md:mt-0 gap-1 ${
                         orientation === "horizontal" ? "flex-col" : "flex-row"
                     }`}>
+                        {friendRequests.map((request, index) => (
+                            <User key={index} style={orientation === "vertical" ? { width: 48, height: 48, minWidth: 48, minHeight: 48, padding: 0, justifyContent: 'center' } : {}}>
+                                <Avatar src={request.avatar} status={request.statusType} style={orientation === "vertical" ? { width: 40, height: 40 } : {}} />
+                                {orientation === "horizontal" && (
+                                    <div>
+                                        <h2 className="font-semibold text-lg">{request.username}</h2>
+                                        <p className="text-sm text-gray-400">Incoming Friend Request</p>
+                                    </div>
+                                )}
+                                <Button variant="primary" onClick={() => acceptFriendRequest(request._id)}>Accept</Button>
+                                <Button variant="secondary" onClick={() => rejectFriendRequest(request._id)}>Reject</Button>
+                            </User>
+                        ))}
+                        {outgoingRequests.map((request, index) => (
+                            <User key={`outgoing-${index}`} style={orientation === "vertical" ? { width: 48, height: 48, minWidth: 48, minHeight: 48, padding: 0, justifyContent: 'center' } : {}}>
+                                <Avatar src={request.avatar === "default.png" ? "/pingu.jpg" : request.avatar || "/pingu.jpg"} status={["offline", "online", "away", "dnd"][request.status || 0] || "offline"} style={orientation === "vertical" ? { width: 40, height: 40 } : {}} />
+                                {orientation === "horizontal" && (
+                                    <div>
+                                        <h2 className="font-semibold text-lg">{request.username}</h2>
+                                        <p className="text-sm text-gray-400">Outgoing Friend Request</p>
+                                    </div>
+                                )}
+                                <Button variant="secondary" onClick={() => cancelFriendRequest(request._id)}>Cancel</Button>
+                            </User>
+                        ))}
                         {friendsData.map((friend, index) => (
                             <User key={index} style={orientation === "vertical" ? { width: 48, height: 48, minWidth: 48, minHeight: 48, padding: 0, justifyContent: 'center' } : {}}>
                                 <Avatar src={friend.avatar} status={friend.statusType} style={orientation === "vertical" ? { width: 40, height: 40 } : {}} />
@@ -414,16 +568,42 @@ export function ChatSidebar({
                        <Profile
                            user={user}
                        />
-                        <div className="bio text-left mt-2 px-2">
-                            <p className="text-gray-600 dark:text-gray-300">{user.bio || "No bio set."}</p>
-                        </div>
+                        
                         <div className="flex flex-row w-full gap-4 align-middle mt-6 text-center">
-                            <Button variant="primary" className="w-full mb-2">Edit Profile</Button>
                             <Button variant="secondary" className="w-full mb-2">Settings</Button>
+                            <Button variant="danger" className="w-full mb-2"
+                            onClick={
+                                () => {
+                                    fetch('/api/auth/logout', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        }
+                                    }).then(() => {
+                                        navigate('/auth');
+                                    });
+                                }
+                            }
+                            >Logout</Button>
                         </div>
                     </div>
                 )}
             </div>
+
+            {/* plus button at bottom right of sidebar, for creating new chats/servers/friends */}
+            { activeTab !== "Avatar" && activeTab !== "Search" ? (
+            <div className="flex w-full justify-end mt-4 relative">
+                <Button 
+                    variant="primary"
+                    className="rounded-full p-3"
+                    onClick={() => setShowPlusPopup(!showPlusPopup)}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                </Button>
+            </div>
+            ) : null }
 
             {/* TabContainer at bottom for mobile only, matches desktop design and search logic */}
             <div className="md:hidden mt-auto pt-4">
@@ -506,5 +686,6 @@ export function ChatSidebar({
                 </TabContainer>
             </div>
         </div>
+        </>
     );
 }

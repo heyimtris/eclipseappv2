@@ -189,6 +189,17 @@ export default function DirectMessage() {
     }
   }, [messages]);
 
+  // Scroll to bottom when typing indicator appears, unless user is scrolled up
+  useEffect(() => {
+    if (isTyping && messageListRef.current) {
+      const el = messageListRef.current;
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+      if (nearBottom) {
+        el.scrollTop = el.scrollHeight;
+      }
+    }
+  }, [isTyping]);
+
   // Scroll to bottom on initial load
   useEffect(() => {
     if (messageListRef.current) {
