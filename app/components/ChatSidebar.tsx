@@ -235,7 +235,7 @@ export function ChatSidebar({
                                             'Content-Type': 'application/json' 
                                         },
                                         body: JSON.stringify({
-                                            memberIds: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map((input: any) => input.value)
+                                            memberIds: Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map((input: any) => input.value).concat([String(user._id)]),
                                         })
                                     }).then(response => {
                                         if (response.ok) {

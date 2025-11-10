@@ -35,6 +35,14 @@ export async function action({ request }: { request: Request }) {
         name: chatName
     });
 
+    // add conversation objectid to each users' "conversations" array
+    const users = await getCollection("users");
+    await users.updateMany(
+        { _id: { $in: memberIds.map((id: string) => new ObjectId(id)) } },
+        { $addToSet: { conversations: result.insertedId } }
+    );
+
+
     return json({ ok: true, conversationId: result.insertedId });
 }
 

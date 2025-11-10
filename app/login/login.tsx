@@ -121,9 +121,7 @@ export function LoginPage({ switchToSignup }: { switchToSignup?: () => void }) {
           <nav className="w-full max-w-md rounded-3xl bg-gray-850 dark:bg-gray-950 p-8 login-cont space-y-4">
             <form className="space-y-2 w-full flex flex-col" onSubmit={handleNext}>
               <div className="flex flex-row gap-2 items-center mb-2">
-                <Button type="button" variant="secondary" className="text-xs px-2 py-1" onClick={checkDb}>
-                  Check DB Connection
-                </Button>
+              
                 {dbStatus && (
                   dbStatus.ok
                     ? <span className="text-green-600 text-xs">Connected</span>
